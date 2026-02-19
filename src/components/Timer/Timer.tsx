@@ -2,6 +2,7 @@ import { Block } from '../Block';
 import { StopButton } from '../StopButton';
 import { StartButton } from '../StartButton';
 import { PauseButton } from '../PauseButton';
+import { RemoveButton } from '../RemoveButton';
 import { Text } from '../Text';
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
@@ -16,13 +17,26 @@ const formatValue = (value: number): string => {
     return `${hours > 0 ? `${hours}:` : ''}${minutes > 0 ? `${minutes}:` : ''}${seconds}`;
 };
 
-export const Timer = () => {
+type TimerProps = {
+    onRemove?: () => void;
+}
+
+export const Timer = ({ onRemove }: TimerProps) => {
     const [value, setValue] = useState(0);
     const [status, setStatus] = useState('idle');
     const time = useRef(0);
     const start = useRef(0);
     const pausedTime = useRef(0);
-    const intervalId = useRef(0);
+    const intervalId = useRef<any>(0);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (intervalId.current) {
+                clearTimeout(intervalId.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (status !== 'started') {
@@ -85,7 +99,15 @@ export const Timer = () => {
     }
 
     return (
-        <Block>
+        <TimerBlock>
+            {onRemove && (
+                <RemoveButtonWrapper>
+                    <RemoveButton onClick={() => {
+                        clearTimeout(intervalId.current);
+                        onRemove();
+                    }} />
+                </RemoveButtonWrapper>
+            )}
             <TimerStyled>
                 <Text isActive={status === 'started'}>{formatValue(value)}</Text>
                 <Separator isActive={status === 'started'}/>
@@ -95,9 +117,20 @@ export const Timer = () => {
                     <StopButton onClick={onStop} isActive={status === 'started'} />
                 </ButtonsWrapper>
             </TimerStyled>
-        </Block>
+        </TimerBlock>
     )
 };
+
+const TimerBlock = styled(Block)`
+    position: relative;
+    padding-top: 32px; /* Ensure space for the button if needed, but top: 8px should be fine without extra padding if it floats over */
+`;
+
+const RemoveButtonWrapper = styled.div`
+    position: absolute;
+    top: 8px;
+    right: 8px;
+`;
 
 const TimerStyled = styled.div`
     display: flex;

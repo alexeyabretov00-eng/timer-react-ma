@@ -14,6 +14,10 @@ export const App = () => {
     id: string
   }>>([]);
 
+  const onRemoveTimer = (id: string) => {
+    setTimers(prev => prev.filter(t => t.id !== id));
+  };
+
   const onAdd = () => {
     setTimers([
       ...timers,
@@ -25,7 +29,7 @@ export const App = () => {
 
   return (<AppStyled>
       <GlobalStyles />
-      {timers.map(x => <Timer key={x.id} />)}
+      {timers.map(x => <Timer key={x.id} onRemove={() => onRemoveTimer(x.id)} />)}
       <AddButton onClick={onAdd} />
     </AppStyled>
   )
